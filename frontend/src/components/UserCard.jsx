@@ -8,19 +8,51 @@ import {
   Heading,
   IconButton,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import { BiTrash } from "react-icons/bi";
 import { CiEdit } from "react-icons/ci";
 import EditModal from "./EditModal";
+import { BASE_URL } from "../App";
 
-function UserCard({ user }) {
+function UserCard({ user, setUsers }) {
+  const toast = useToast();
+  const handleDeleteUser = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(BASE_URL + "/friends/" + user.id, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error);
+      }
+      setUsers((prevUsers) => prevUsers.filter((u) => u.id !== user.id));
+      toast({
+        status: "success",
+        title: "Success",
+        description: "Friend deleted successfully.",
+        duration: 2000,
+        position: "top-center",
+      });
+    } catch (error) {
+      toast({
+        status: "error",
+        title: "An error occurred",
+        description: error.message,
+        duration: 4000,
+        isClosable: true,
+        position: "top-center",
+      });
+    }
+  };
   return (
     <Card>
       <CardHeader>
         <Flex gap={4}>
           {/* left */}
           <Flex flex={1} gap={4} alignItems={"center"}>
-            <Avatar src="https://avatar.iran.liara.run/public/boy?username=john%20doe" />
+            <Avatar src={user.imgUrl} />
             <Box>
               <Heading size={"sm"}>{user.name}</Heading>
               <Text>{user.role}</Text>
@@ -28,13 +60,13 @@ function UserCard({ user }) {
           </Flex>
           {/* right */}
           <Flex>
-            <EditModal user={user} />
+            <EditModal user={user} setUsers={setUsers}/>
             <IconButton
               variant={"ghost"}
               colorScheme="red"
               size={"sm"}
               aria-label="See menu"
-              icon={<BiTrash size={20} />}
+              icon={<BiTrash size={20} onClick={handleDeleteUser} />}
             />
           </Flex>
         </Flex>
